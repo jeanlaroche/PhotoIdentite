@@ -27,32 +27,40 @@ def doit(args):
             centreXPix = int(event.xdata)
 
     imageOrig = imread(args.ImageOriginale)
-    pl.connect('button_press_event', on_click)
-    while 1:
-        pl.imshow(imageOrig)
-        pl.axis('off')
-        print("Clickez sur le bas du menton")
-        while frontY is None or mentonY is None or centreXPix is None:
-            pl.pause(.1)
+    if args.pasCouper:
+        imageModifiee = imageOrig
+        # Pixels par inch.
+        largeurImagePix = imageOrig.shape[1]
+        hauteurImagePix = imageOrig.shape[0]
+        dpi_f = largeurImagePix / largeurCm * cmParInch
+        dpi = int(round(dpi_f))
+    else:
+        pl.connect('button_press_event', on_click)
+        while 1:
+            pl.imshow(imageOrig)
+            pl.axis('off')
+            print("Clickez sur le bas du menton")
+            while frontY is None or mentonY is None or centreXPix is None:
+                pl.pause(.1)
 
-        # Calcul de la hauteur de l'image, proportionelle a la hauteur du visage.
-        hauteurVisagePix = (abs(frontY-mentonY))
-        hauteurImagePix = int(round(hauteurVisagePix / visageRatio))
-        # La largeur de l'image est proportionelle a sa hauteur
-        largeurImagePix = int(round(hauteurImagePix / hauteurCm * largeurCm))
-        # Le haut de l'image correspond a y = 0!
-        basYPix = max(mentonY,frontY) + (hauteurImagePix-hauteurVisagePix)//2
-        gaucheXPix = centreXPix - largeurImagePix//2
-        # Extraction de l'image
-        imageModifiee = imageOrig[basYPix-hauteurImagePix:basYPix,gaucheXPix:gaucheXPix+largeurImagePix]
-        pl.imshow(imageModifiee)
-        pl.pause(.1)
-        break
-        # if input('La photo est bonne? -> [o/n]') == 'o': break
-        # print("OK on recommence")
-    # Pixels par inch.
-    dpi_f = largeurImagePix/largeurCm*cmParInch
-    dpi = int(round(dpi_f))
+            # Calcul de la hauteur de l'image, proportionelle a la hauteur du visage.
+            hauteurVisagePix = (abs(frontY-mentonY))
+            hauteurImagePix = int(round(hauteurVisagePix / visageRatio))
+            # La largeur de l'image est proportionelle a sa hauteur
+            largeurImagePix = int(round(hauteurImagePix / hauteurCm * largeurCm))
+            # Le haut de l'image correspond a y = 0!
+            basYPix = max(mentonY,frontY) + (hauteurImagePix-hauteurVisagePix)//2
+            gaucheXPix = centreXPix - largeurImagePix//2
+            # Extraction de l'image
+            imageModifiee = imageOrig[basYPix-hauteurImagePix:basYPix,gaucheXPix:gaucheXPix+largeurImagePix]
+            pl.imshow(imageModifiee)
+            pl.pause(.1)
+            break
+            # if input('La photo est bonne? -> [o/n]') == 'o': break
+            # print("OK on recommence")
+            # Pixels par inch.
+        dpi_f = largeurImagePix/largeurCm*cmParInch
+        dpi = int(round(dpi_f))
     
     if args.repliquer:
         # Cree une image en replicant imageModifiee autant de fois possible dans une image de taille
@@ -78,15 +86,16 @@ def doit(args):
         imageModifiee=C
 
     imwrite(args.ImageFinale,imageModifiee,dpi=[dpi,dpi])
-    print(f"Image sauvee sur {args.ImageFinale}")
+    print(f"Image sauvée sur {args.ImageFinale}")
 
 if __name__ == '__main__':
     import argparse
-    desc='''Cree un photo d'identitee aux normes francaises. 3.5 cm par 4.5 cm, le visage occupant 74% de l'image'''
+    desc='''Crée un photo d'identité aux normes françaises. 3.5 cm par 4.5 cm, le visage occupant 74% de l'image'''
     parser = argparse.ArgumentParser('photo', description=desc)
     parser.add_argument('ImageOriginale', help='Image originale')
     parser.add_argument('ImageFinale', help='Image finale')
-    parser.add_argument('-t', dest='repliquer', action='store_true', help = 'Repliquer l\'image au format 6x4')
+    parser.add_argument('-o', dest='pasCouper', action='store_true', help = 'Utiliser l\'image original inchangée')
+    parser.add_argument('-t', dest='repliquer', action='store_true', help = 'Répliquer l\'image au format 6x4')
     args = parser.parse_args()
 
     doit(args)
